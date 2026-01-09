@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Header } from '../component/layout/Header';
 import { Footer } from '../component/sections/Footer';
 import { Container } from '../component/layout/Container';
 import { Card } from '../component/Card';
@@ -90,7 +89,7 @@ export const ContactPage: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-neutral-light-gray">
-            <Header />
+
 
             {/* Hero Section */}
             <section className="pt-32 pb-16 hero-gradient text-white relative overflow-hidden">

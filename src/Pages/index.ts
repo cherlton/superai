@@ -3,3 +3,6 @@ export { ContactPage } from './ContactPage';
 
 // Auth Pages
 export { LoginPage, SignUpPage, ForgotPasswordPage } from './auth';
+
+// Dashboard
+export { DashboardPage } from './dashboard/DashboardPage';

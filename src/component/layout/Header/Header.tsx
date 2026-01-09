@@ -3,8 +3,8 @@ import { cn } from '../../../utils';
 import { Container } from '../Container';
 import { Button } from '../../common/Button';
 import logo from '../../../assets/logo.png';
-// 1. Add useLocation to imports
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../hooks';
 
 interface NavLink {
     label: string;
@@ -23,39 +23,54 @@ export const Header: React.FC = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const navigate = useNavigate();
-    // 2. Get the current pathname
-    const { pathname } = useLocation();
+    const { isAuthenticated, logout } = useAuth();
 
-    // Handle scroll styling (changing header background on scroll)
+    const handleLogout = () => {
+        logout();
+        // Force a full page reload to clear all state
+        window.location.href = '/';
+        // Or use navigate and then reload:
+        // navigate('/');
+        // window.location.reload();
+    };
+
+    // Handle scroll styling
     useEffect(() => {
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 20);
         };
-        // Check immediately in case the page started slightly scrolled
+        // Check immediately in case the page started slightly scrolled despite our efforts
         handleScroll();
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-
-    // --- NEW SECTION: Smooth Scroll on Navigation ---
+    // --- FIXED SECTION ---
+    // Force scroll to top on reload/load
     useEffect(() => {
-        // This effect runs when the component mounts (initial load/reload)
-        // AND whenever the `pathname` changes (e.g., navigating from '/' to '/contact').
-
-        //We check if there is no hash (like #pricing) in the URL. 
-        // If there is a hash, we usually want the browser's default behavior of jumping to that section.
-        if (!window.location.hash) {
-            window.scrollTo({
-                top: 0,
-                left: 0,
-                behavior: 'smooth' // <--- The key part for "ease"
-            });
+        // 1. Tell the browser not to restore the previous scroll position automatically.
+        // This is crucial for modern browsers (Chrome/Firefox) that try to remember where you were.
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
         }
 
-    }, [pathname]); // Add pathname as a dependency
-    // --------------------------------------------------
+        // 2. Immediate jump to the absolute top of the page.
+        // We use instant behavior so it doesn't look like it's scrolling *back* up after load.
+        window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: 'instant'
+        });
 
+        // Optional: If this header is unmounted (e.g., changing routes in a SPA),
+        // you might want to reset restoration to auto so other pages behave normally.
+        return () => {
+            if ('scrollRestoration' in history) {
+                history.scrollRestoration = 'auto';
+            }
+        };
+    }, []);
+    // ---------------------
 
     // Prevent body scroll when mobile menu is open
     useEffect(() => {
@@ -72,14 +87,6 @@ export const Header: React.FC = () => {
     const toggleMobileMenu = () => {
         setIsMobileMenuOpen(!isMobileMenuOpen);
     };
-
-    // To handle anchor link clicks (like #pricing) while already on the page
-    // and close menu if open
-    const handleAnchorClick = () => {
-        if (isMobileMenuOpen) setIsMobileMenuOpen(false);
-        // Note: For smooth scrolling *to anchors*, you usually need CSS: html { scroll-behavior: smooth; }
-    };
-
 
     return (
         <>
@@ -116,8 +123,6 @@ export const Header: React.FC = () => {
                                 <a
                                     key={link.label}
                                     href={link.href}
-                                    // Added click handler for anchor links
-                                    onClick={link.href.startsWith('#') ? handleAnchorClick : undefined}
                                     className={cn(
                                         'text-sm font-medium transition-colors hover:text-primary-blue flex items-center gap-1',
                                         isScrolled ? 'text-neutral-dark-gray' : 'text-white/90'
@@ -135,20 +140,52 @@ export const Header: React.FC = () => {
 
                         {/* Desktop CTA Buttons */}
                         <div className="hidden lg:flex items-center gap-3">
-                            <Button
-                                onClick={() => navigate('/login')}
-                                variant={isScrolled ? 'ghost' : 'outline'}
-                                size="sm"
-                                className={cn(!isScrolled && 'text-white border-white/30 hover:bg-white/10')}
-                            >
-                                Log in
-                            </Button>
-                            <Button
-                                onClick={() => navigate('/signup')}
-
-                                variant="primary" size="sm">
-                                Sign up
-                            </Button>
+                            {isAuthenticated ? (
+                                <>
+                                    <button
+                                        onClick={() => navigate('/dashboard')}
+                                        className={cn(
+                                            'flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all',
+                                            isScrolled
+                                                ? 'text-neutral-charcoal hover:bg-neutral-light-gray'
+                                                : 'text-white hover:bg-white/10'
+                                        )}
+                                        title="Go to Dashboard"
+                                    >
+                                        {/* Dashboard Icon */}
+                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                        </svg>
+                                        <span className="hidden xl:inline">Dashboard</span>
+                                    </button>
+                                    <Button
+                                        onClick={handleLogout}
+                                        variant={isScrolled ? 'ghost' : 'outline'}
+                                        size="sm"
+                                        className={cn(!isScrolled && 'text-white border-white/30 hover:bg-white/10')}
+                                    >
+                                        Log out
+                                    </Button>
+                                </>
+                            ) : (
+                                <>
+                                    <Button
+                                        onClick={() => navigate('/login')}
+                                        variant={isScrolled ? 'ghost' : 'outline'}
+                                        size="sm"
+                                        className={cn(!isScrolled && 'text-white border-white/30 hover:bg-white/10')}
+                                    >
+                                        Log in
+                                    </Button>
+                                    <Button
+                                        onClick={() => navigate('/signup')}
+                                        variant="primary"
+                                        size="sm"
+                                    >
+                                        Sign up
+                                    </Button>
+                                </>
+                            )}
                         </div>
 
                         {/* Mobile Menu Button */}
@@ -222,7 +259,6 @@ export const Header: React.FC = () => {
                                     <a
                                         href={link.href}
                                         className="flex items-center justify-between py-3 text-lg font-medium text-neutral-charcoal hover:text-primary-blue transition-colors"
-                                        // Combined handler: close menu AND let default navigation happen
                                         onClick={toggleMobileMenu}
                                     >
                                         <span>{link.label}</span>
@@ -237,37 +273,68 @@ export const Header: React.FC = () => {
                         </ul>
                     </nav>
 
+
                     {/* Mobile CTA Buttons */}
-                    <div
-                        className={cn(
-                            'space-y-3 pt-6 border-t border-neutral-gray',
-                            'transform transition-all duration-300 ease-out',
-                            isMobileMenuOpen
-                                ? 'translate-y-0 opacity-100'
-                                : 'translate-y-4 opacity-0'
+                    <div className={cn(
+                        'space-y-3 pt-6 border-t border-neutral-gray',
+                        'transform transition-all duration-300 ease-out',
+                        isMobileMenuOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
+                    )}>
+                        {isAuthenticated ? (
+                            <>
+                                <button
+                                    onClick={() => {
+                                        toggleMobileMenu();
+                                        navigate('/dashboard');
+                                    }}
+                                    className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-primary-blue text-white font-medium hover:bg-primary-dark-blue transition-colors"
+                                >
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                    </svg>
+                                    Go to Dashboard
+                                </button>
+                                <Button
+                                    variant="ghost"
+                                    size="lg"
+                                    fullWidth
+                                    className="text-neutral-charcoal justify-center"
+                                    onClick={() => {
+                                        toggleMobileMenu();
+                                        handleLogout();
+                                    }}
+                                >
+                                    Log out
+                                </Button>
+                            </>
+                        ) : (
+                            <>
+                                <Button
+                                    variant="ghost"
+                                    size="lg"
+                                    fullWidth
+                                    className="text-neutral-charcoal justify-center"
+                                    onClick={() => {
+                                        toggleMobileMenu();
+                                        navigate('/login');
+                                    }}
+                                >
+                                    Log in
+                                </Button>
+                                <Button
+                                    variant="primary"
+                                    size="lg"
+                                    fullWidth
+                                    className="justify-center"
+                                    onClick={() => {
+                                        toggleMobileMenu();
+                                        navigate('/signup');
+                                    }}
+                                >
+                                    Sign up
+                                </Button>
+                            </>
                         )}
-                        style={{
-                            transitionDelay: isMobileMenuOpen ? `${(navLinks.length + 1) * 75}ms` : '0ms',
-                        }}
-                    >
-                        <Button
-                            variant="ghost"
-                            size="lg"
-                            fullWidth
-                            className="text-neutral-charcoal justify-center"
-                            onClick={() => { toggleMobileMenu(); navigate('/login'); }}
-                        >
-                            Log in
-                        </Button>
-                        <Button
-                            variant="primary"
-                            size="lg"
-                            fullWidth
-                            className="justify-center"
-                            onClick={() => { toggleMobileMenu(); navigate('/signup'); }}
-                        >
-                            Sign up
-                        </Button>
                     </div>
                 </div>
             </div>

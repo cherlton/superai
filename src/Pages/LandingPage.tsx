@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Header } from '../component/layout/Header';
 import { Hero } from '../component/sections/Hero';
 import { Features } from '../component/sections/Features';
 import { DashboardPreview } from '../component/sections/DashboardPreview';
@@ -76,7 +75,7 @@ export const LandingPage: React.FC = () => {
     return (
         <div className="overflow-x-hidden">
             {/* Header and Hero - No animation */}
-            <Header />
+            {/* Header and Hero - No animation */}
             <Hero />
 
             {/* Features - Slide from Left */}
