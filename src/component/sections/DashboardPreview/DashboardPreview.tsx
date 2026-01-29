@@ -42,7 +42,7 @@ export const DashboardPreview: React.FC = () => {
                 {/* Section Header */}
                 <div className="text-center max-w-3xl mx-auto mb-16">
                     <span className="inline-block px-4 py-2 bg-primary-purple/10 text-primary-purple text-sm font-semibold rounded-full mb-4">
-                        Dashboard Preview
+                        Dashboard  Preview
                     </span>
                     <h2 className="text-4xl md:text-5xl font-bold text-neutral-charcoal mb-6">
                         Your command center for
@@ -50,7 +50,7 @@ export const DashboardPreview: React.FC = () => {
                         <span className="gradient-text">intelligent insights</span>
                     </h2>
                     <p className="text-lg text-neutral-dark-gray">
-                        Experience the power of real-time AI analysis. Search any topic to see
+                        Experience the powers of real-time AI analysis. Search any topic to see
                         how Insight-Sphere patterns the future of content and learning.
                     </p>
                 </div>
