@@ -10,7 +10,7 @@ import { Eye, EyeOff } from 'lucide-react';
 export const LoginPage: React.FC = () => {
     const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
-    const { login, isLoading, error } = useAuth();
+    const { login, loginWithGoogle, loginWithGithub, isLoading, error } = useAuth();
 
     const [formData, setFormData] = useState({
         email: '',
@@ -27,56 +27,48 @@ export const LoginPage: React.FC = () => {
         }));
     };
 
-    // Google Login Handler
     const handleGoogleLogin = () => {
-        // Redirecting to Google's OAuth 2.0 endpoint
         const client_id = "1055485917292-g31hnbk3kicbgg4d05mmads43sjvinpk.apps.googleusercontent.com";
         const redirect_uri = encodeURIComponent(window.location.origin + "/login");
         const scope = encodeURIComponent("email profile openid");
-        window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${client_id}&redirect_uri=${redirect_uri}&response_type=token&scope=${scope}`;
+
+        // Added &prompt=select_account at the end
+        window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${client_id}&redirect_uri=${redirect_uri}&response_type=token&scope=${scope}&prompt=select_account`;
     };
 
-    // GitHub Login Handler
     const handleGithubLogin = () => {
         const client_id = "Ov23liPzsJd7BiZC8RxM";
         const redirect_uri = encodeURIComponent(window.location.origin + "/login");
-        window.location.href = `https://github.com/login/oauth/authorize?client_id=${client_id}&redirect_uri=${redirect_uri}&scope=user:email`;
-    };
 
-    // Detect redirect code/token from URL
-    // Detect redirect code/token from URL
+        // Added prompt=select_account to force user to choose or log in again
+        // Added allow_signup=true to allow new users to register via GitHub
+        window.location.href = `https://github.com/login/oauth/authorize?client_id=${client_id}&redirect_uri=${redirect_uri}&scope=user:email&prompt=select_account&allow_signup=true`;
+    };
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
 
-        // Handle GitHub callback (?code=...)
+        // 1. Handle GitHub callback
         const githubCode = urlParams.get('code');
         if (githubCode) {
-            // Clear the URL parameters to avoid re-triggering
             window.history.replaceState({}, document.title, "/login");
-
-            // loginWithGithub(githubCode).then(() => {
-            //     navigate('/dashboard');
-            // }).catch(() => {
-            //     setFormError('GitHub login error');
-            //     console.error();
-            // });
+            loginWithGithub(githubCode).then((result: { success: boolean; error?: string }) => {
+                if (result.success) navigate('/dashboard');
+                else setFormError(result.error || 'GitHub login error');
+            });
         }
 
-        // Handle Google callback (#access_token=...)
+        // 2. Handle Google callback
         const googleToken = hashParams.get('access_token');
         if (googleToken) {
-            // Clear the URL hash to avoid re-triggering
             window.history.replaceState({}, document.title, "/login");
-
-            // loginWithGoogle(googleToken).then(() => {
-            //     navigate('/dashboard');
-            // }).catch(() => {
-            //     setFormError('Google login error');
-            //     console.error();
-            // });
+            loginWithGoogle(googleToken).then((result: { success: boolean; error?: string }) => {
+                if (result.success) navigate('/dashboard');
+                else setFormError(result.error || 'Google login error');
+            });
         }
-    }, []); // Remove loginWithGithub, loginWithGoogle, navigate from dependencies
+    }, [loginWithGoogle, loginWithGithub, navigate]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setFormError(null);

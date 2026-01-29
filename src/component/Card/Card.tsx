@@ -29,6 +29,10 @@ export class CardStyles {
       bg-transparent
       border-2 border-neutral-gray
     `,
+    transparent: `
+      bg-transparent backdrop-blur-sm
+      border border-white/20
+    `,
   };
 
   private static readonly paddings: Record<string, string> = {

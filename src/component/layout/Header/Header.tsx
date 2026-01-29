@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '../../../utils';
 import { Container } from '../Container';
 import { Button } from '../../common/Button';
 import logo from '../../../assets/logo.png';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../hooks';
 
 interface NavLink {
@@ -22,8 +22,13 @@ const navLinks: NavLink[] = [
 export const Header: React.FC = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const navigate = useNavigate();
     const { isAuthenticated, logout } = useAuth();
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    const isInternalPage = useMemo(() => {
+        return ['/dashboard', '/settings'].includes(location.pathname);
+    }, [location.pathname]);
 
     const handleLogout = () => {
         logout();
@@ -96,7 +101,9 @@ export const Header: React.FC = () => {
                     'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
                     isScrolled || isMobileMenuOpen
                         ? 'bg-white/95 backdrop-blur-lg shadow-sm py-3'
-                        : 'bg-transparent py-5'
+                        : isInternalPage
+                            ? 'bg-teal-900/30 backdrop-blur-md py-5'
+                            : 'bg-transparent py-5'
                 )}
             >
                 <Container>
@@ -110,7 +117,7 @@ export const Header: React.FC = () => {
                             <span
                                 className={cn(
                                     'font-bold text-xl transition-colors',
-                                    isScrolled || isMobileMenuOpen ? 'text-neutral-charcoal' : 'text-white'
+                                    (isScrolled || isMobileMenuOpen) ? 'text-neutral-charcoal' : 'text-white'
                                 )}
                             >
                                 Insight-Sphere
@@ -145,24 +152,42 @@ export const Header: React.FC = () => {
                                     <button
                                         onClick={() => navigate('/dashboard')}
                                         className={cn(
-                                            'flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all',
+                                            'flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium text-sm transition-all',
                                             isScrolled
                                                 ? 'text-neutral-charcoal hover:bg-neutral-light-gray'
                                                 : 'text-white hover:bg-white/10'
                                         )}
                                         title="Go to Dashboard"
                                     >
-                                        {/* Dashboard Icon */}
                                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                                         </svg>
-                                        <span className="hidden xl:inline">Dashboard</span>
+                                        <span>Dashboard</span>
+                                    </button>
+                                    <button
+                                        onClick={() => navigate('/settings')}
+                                        className={cn(
+                                            'flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium text-sm transition-all',
+                                            isScrolled
+                                                ? 'text-neutral-charcoal hover:bg-neutral-light-gray'
+                                                : 'text-white hover:bg-white/10'
+                                        )}
+                                        title="Account Settings"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37a1.724 1.724 0 002.572-1.065z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        <span>Settings</span>
                                     </button>
                                     <Button
                                         onClick={handleLogout}
                                         variant={isScrolled ? 'ghost' : 'outline'}
                                         size="sm"
-                                        className={cn(!isScrolled && 'text-white border-white/30 hover:bg-white/10')}
+                                        className={cn(
+                                            'text-sm font-semibold',
+                                            !isScrolled && 'text-white border-white/30 hover:bg-white/10'
+                                        )}
                                     >
                                         Log out
                                     </Button>
